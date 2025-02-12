@@ -77,6 +77,8 @@
     <script>
       $(function() {
         $('#testForm').submit(function(e) {
+          e.preventDefault();
+          console.log("Form data being submitted:", $('#testForm').serialize());
           $.ajax({
             url: '/api/issues/apitest',
             type: 'post',

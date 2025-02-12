@@ -6,11 +6,19 @@ const expect      = require('chai').expect;
 const cors        = require('cors');
 require('dotenv').config();
 
+const mongoose = require('mongoose');
+
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
 
 let app = express();
+
+const mongoURI = process.env.MONGO_URI;
+
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
