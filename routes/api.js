@@ -11,10 +11,11 @@ module.exports = function (app) {
       let project = req.params.project;
       let filters = { project: project, ...req.query };
 
-      console.log("Filters used for search:", filters);
+      console.log('Filters:', filters);
 
       try {
         let issues = await Issue.find(filters).select('-__v');
+       /*console.log('Fetched Issues:', issues);*/
         res.json(issues);
     } catch (error) {
       if (!res.headersSent) {

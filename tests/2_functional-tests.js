@@ -130,6 +130,7 @@ suite('Functional Tests', function() {
       });     
 
       test('GET /api/issues/:project should return all issues for the project', function (done) {
+        console.log(mongoose.connection.db.databaseName);
         chai.request(server)
           .get('/api/issues/apitest')
           .end((err, res) => {
@@ -164,17 +165,17 @@ suite('Functional Tests', function() {
               });
           });
 
-          test('GET /api/issues/:project with one filter should return filtered issues', function (done) {
+          test('GET /api/issues/:project with multiple filter should return filtered issues', function (done) {
             chai.request(server)
-              .get('/api/issues/apitest?assigned_to=Tester&status_text=In Progress') 
+              .get('/api/issues/apitest?assigned_to=tester&created_by=Creator') 
               .end((err, res) => {
                 assert.equal(res.status, 200);
                 assert.isArray(res.body, 'Response should be an array');
           
                 if (res.body.length > 0) {
                   res.body.forEach(issue => {
-                    assert.equal(issue.assigned_to, 'Tester', 'All returned issues should have assigned_to as Tester');
-                    assert.equal(issue.status_text, 'In Progress', 'All returned issues should have status_text as In Progress');
+                    assert.equal(issue.assigned_to, 'tester', 'All returned issues should have assigned_to as tester');
+                    assert.equal(issue.created_by, 'Creator', 'All returned issues should have created_by as Creator');
                   });
                 } else {
                   console.log('No issues found with the given filter');
