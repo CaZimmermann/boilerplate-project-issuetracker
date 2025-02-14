@@ -74,10 +74,10 @@ module.exports = function (app) {
         return res.json({ error: 'could not update', _id });
     }
 
-      for (let key in updates) {
-        if (updates[key] === null || updates[key] === undefined) {
-            delete updates[key];
-        }
+    for (let key in updates) {
+      if (updates[key] === "" || updates[key] === null || updates[key] === undefined) {
+        delete updates[key];
+      }
     }
     
    
@@ -86,16 +86,19 @@ module.exports = function (app) {
       }
 
       try {
-        let issue = await Issue.findById(_id);
+        let issue = await Issue.findByIdAndUpdate(
+          _id,
+          { ...updates, updated_on: new Date() },
+          { new: false });
         if (!issue) {
             return res.json({ error: 'could not update', _id });
         }
 
-        Object.assign(issue, updates);
-        issue.updated_on = new Date();
+       // Object.assign(issue, updates);
+       // issue.updated_on = new Date();
 
-        await issue.save();
-        res.json({ result: 'successfully updated', _id });
+       // await issue.save();
+       res.json({ result: 'successfully updated', '_id':_id });
       } catch (error) {
         return res.json({ error: 'could not update', _id });
     }

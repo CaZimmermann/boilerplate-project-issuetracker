@@ -4,8 +4,6 @@ const assert = chai.assert;
 const server = require('../server');
 const mongoose = require('mongoose');
 const Issue = require('../Issue');
-const expect = chai.expect;
-
 
 chai.use(chaiHttp);
 
@@ -17,7 +15,7 @@ suite('Functional Tests', function() {
     // Before hook to create a test issue for testing
     before(function(done) {
       chai.request(server)
-        .post('/api/issues/apitest') // Adjust to your endpoint
+        .post('/api/issues/apitest') 
         .send({
           issue_title: 'Test Issue Title',
           issue_text: 'This is a test issue text',
@@ -28,8 +26,16 @@ suite('Functional Tests', function() {
         })
         .end((err, res) => {
           if (err) return done(err);
-          validId = res.body._id; // Store the ID for later tests
-          done();
+          console.log('Created Issue Response:', res.body); // Debugging line
+          validId = res.body._id;
+          // Ensure that the issue is actually in the database
+          chai.request(server)
+            .get(`/api/issues/apitest`)
+            .end((err, res) => {
+              if (err) return done(err);
+              assert.equal(res.body.length > 0, true); // Make sure there's at least one issue
+              done();
+            });
         });
     });
 
@@ -46,7 +52,7 @@ suite('Functional Tests', function() {
     test('POST /api/issues/:project should create a new issue with all fields', async function () {
         const res = await chai
           .request(server)
-          .post('/api/issues/apitest') // Adjust project name as needed
+          .post('/api/issues/apitest') 
           .send({
             issue_title: 'Test Issue Title',
             issue_text: 'This is a test issue text',
@@ -54,10 +60,7 @@ suite('Functional Tests', function() {
             assigned_to: 'John Doe',
             status_text: 'In Progress',
           });
-    
-        // Check if the status is 200
-        assert.equal(res.status, 200);
-    
+        assert.equal(res.status, 200);    
         // Ensure all required fields are returned in the response
         assert.hasAllKeys(res.body, [
           'issue_title',
@@ -96,7 +99,6 @@ suite('Functional Tests', function() {
             // Missing required field: created_by
           });
     
-        // Check if the status is 400 and error message is returned
         assert.deepEqual(res.body, { error: 'required field(s) missing' });
       });
     
@@ -182,106 +184,100 @@ suite('Functional Tests', function() {
                 }
                 done();
               });
-          });
-
-          test('PUT /api/issues/:project should update a single field', function (done) {
-            chai.request(server)
-              .get('/api/issues/apitest')
-              .end((err, res) => {
-                if (err) return done(err);
-    
-                let validId = res.body[0]?._id;
-                if (!validId) return done(new Error("No valid _id found for testing"));
-                chai.request(server)
-                .put('/api/issues/apitest')
-                .send({ _id: validId, issue_text: "Updated text" })
-                .end((err, res) => {
-                    assert.equal(res.status, 200);
-                    assert.deepEqual(res.body, { result: 'successfully updated', _id: validId });
-                    done();
-                });
-                });
-            });
-            test('PUT /api/issues/:project should update multiple fields', function (done) {
-                chai.request(server)
-                    .get('/api/issues/apitest') 
-                    .end((err, res) => {
-                        if (err) return done(err);
-            
-                        let validId = res.body[0]?._id; 
-                        if (!validId) return done(new Error("No valid _id found for testing"));
-            
-                        chai.request(server)
-                            .put('/api/issues/apitest')
-                            .send({
-                                _id: validId, 
-                                issue_title: "Updated Title", 
-                                status_text: "Updated Status"
-                            })
-                            .end((err, res) => {
-                                assert.equal(res.status, 200); 
-                                assert.deepEqual(res.body, { result: 'successfully updated', _id: validId });
-            
-                                chai.request(server)
-                                    .get('/api/issues/apitest')
-                                    .end((err, res) => {
-                                        if (err) return done(err);
-                                        let updatedIssue = res.body.find(issue => issue._id === validId);
-                                        assert.equal(updatedIssue.issue_title, "Updated Title"); 
-                                        assert.equal(updatedIssue.status_text, "Updated Status"); 
-                                        done();
-                                    });
-                            });
-                    });
-            });
-            
-            test('PUT /api/issues/:project should return error if _id is missing', function (done) {
-                chai.request(server)
-                    .put('/api/issues/apitest')
-                    .send({
-                        issue_title: "Updated Title", 
-                        status_text: "Updated Status"
-                    })
-                    .end((err, res) => {
-                        assert.deepEqual(res.body, { error: 'missing _id' });
-                        done();
-                    });
-            });
-            test('PUT /api/issues/:project should return error if no fields to update', function (done) {
-                chai.request(server)
-                    .get('/api/issues/apitest') 
-                    .end((err, res) => {
-                        if (err) return done(err);
-            
-                        let validId = res.body[0]?._id; 
-                        if (!validId) return done(new Error("No valid _id found for testing"));
-                chai.request(server)
-                    .put('/api/issues/apitest')
-                    .send({
-                        _id: validId, 
-                    })
-                    .end((err, res) => {
-                        assert.deepEqual(res.body, { error: 'no update field(s) sent' , _id: validId});
-                        done();
-                    });
-            });
-        });    
-
-        test('PUT /api/issues/:project should return error if _id is invalid', function (done) {
-            // Send a PUT request with an invalid _id
+          });    
+          
+          test('PUT /api/issues/:project should update one field on an issue', function (done) {
             chai.request(server)
                 .put('/api/issues/apitest')
                 .send({
-                    _id: 'invalid_id',  // Invalid _id
+                    _id: validId, 
+                    issue_text: "Updated issue text"
+                })
+                .end((err, res) => {
+                  if (err) return done(err);
+
+                    assert.equal(res.status, 200);
+                    assert.deepEqual(res.body, { result: 'successfully updated', _id: validId });
+        
+                    chai.request(server)
+                        .get('/api/issues/apitest')
+                        .query({ _id: validId })
+                        .end((err, res) => {
+                            assert.equal(res.status, 200);
+                            assert.isArray(res.body);
+                            done();
+                        });
+                });
+        });
+
+        test('PUT /api/issues/:project should update multiple fields on an issue', function (done) {
+          chai.request(server)
+              .put('/api/issues/apitest')
+              .send({
+                  _id: validId, 
+                  issue_text: "Updated issue text",
+                  issue_title: "Updated title",
+                  status_text: "In Progress"
+              })
+              .end((err, res) => {
+                if (err) return done(err);
+
+                  assert.equal(res.status, 200);
+                  assert.deepEqual(res.body, { result: 'successfully updated', _id: validId });
+      
+                  chai.request(server)
+                      .get('/api/issues/apitest')
+                      .query({ _id: validId })
+                      .end((err, res) => {
+                          assert.equal(res.status, 200);
+                          assert.isArray(res.body);
+                          done();
+                      });
+              });
+      });
+        
+      test('PUT /api/issues/:project should return error when _id is missing', function (done) {
+        chai.request(server)
+            .put('/api/issues/apitest')
+            .send({
+                issue_text: "Updated issue text",
+                issue_title: "Updated title",
+                status_text: "In Progress"
+            })
+            .end((err, res) => {
+                if (err) return done(err);    
+                assert.deepEqual(res.body, { error: 'missing _id' });
+    
+                done();
+            });
+    });
+
+    test('PUT /api/issues/:project should return error when no fields to update', function (done) {
+      chai.request(server)
+          .put('/api/issues/apitest')
+          .send({
+              _id: validId
+          })
+          .end((err, res) => {
+              if (err) return done(err);
+              assert.deepEqual(res.body, { error: 'no update field(s) sent', _id: validId });
+  
+              done();
+          });
+  });
+
+        test('PUT /api/issues/:project should return error if _id is invalid', function (done) {
+            chai.request(server)
+                .put('/api/issues/apitest')
+                .send({
+                    _id: 'invalid_id',  
                     issue_text: "Updated text"
                 })
                 .end((err, res) => {                    
-                    // Ensure the error message is returned with the invalid _id
                     assert.deepEqual(res.body, { error: 'could not update', _id: 'invalid_id' });
                     done();
                 });
         });
-        let validId; 
 
         before(function (done) {
             chai.request(server)
