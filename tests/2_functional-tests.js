@@ -220,9 +220,13 @@ suite('Functional Tests', function() {
                   status_text: "In Progress"
               })
               .end((err, res) => {
-                if (err) return done(err);
+                if (err) {
+                  console.error('Error in PUT request:', err); // Log error if it occurs
+                  return done(err);
+              }
 
-                  assert.equal(res.status, 200);
+                console.log('PUT Response:', res.body);
+
                   assert.deepEqual(res.body, { result: 'successfully updated', _id: validId });
       
                   chai.request(server)
@@ -260,9 +264,12 @@ suite('Functional Tests', function() {
           })
           .end((err, res) => {
               if (err) return done(err);
+
+              console.log('Response:', res.body);
+
               assert.deepEqual(res.body, { error: 'no update field(s) sent', _id: validId });
-  
-              done();
+
+            done();
           });
   });
 

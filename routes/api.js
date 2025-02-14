@@ -63,46 +63,55 @@ module.exports = function (app) {
   }
 })
     
-    .put(async function (req, res){
-      let { _id, ...updates } = req.body;
-      
-      if (!_id) {
-        return res.json({ error: 'missing _id' });
-      }
+.put(async function (req, res) {
+  let { _id, ...updates } = req.body;
+  console.log('Received PUT request body:', req.body);
 
-      if (!mongoose.Types.ObjectId.isValid(String(_id))) {
-        return res.json({ error: 'could not update', _id });
+  // 1. Check if _id is missing
+  if (!_id) {
+    return res.json({ error: 'missing _id' });
+  }
+
+  // 2. Check if _id is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(String(_id))) {
+    return res.json({ error: 'could not update', _id });
+  }
+
+  Object.keys(updates).forEach((key) => {
+    if (updates[key] === "" || updates[key] === null || updates[key] === undefined) {
+      delete updates[key];
+    }
+  });
+
+  if (Object.keys(updates).length === 0) {
+    return res.json({ error: 'no update field(s) sent', _id });
+  }
+
+  console.log('Fields to update:', updates);
+
+  try {
+    // Update the issue and ensure the 'updated_on' field is updated
+    let updatedIssue = await Issue.findByIdAndUpdate(
+      _id,
+      { ...updates, updated_on: new Date() },
+      { new: true }  // This returns the updated document
+    );
+
+    if (!updatedIssue) {
+      return res.json({ error: 'could not update', _id });
     }
 
-    for (let key in updates) {
-      if (updates[key] === "" || updates[key] === null || updates[key] === undefined) {
-        delete updates[key];
-      }
-    }
-    
-   
-      if (Object.keys(updates).length === 0) {
-        return res.json({ error: 'no update field(s) sent', _id });
-      }
+    // 8. Return a success response
+    console.log('Updated Issue:', updatedIssue);
+    res.json({ result: 'successfully updated', _id: updatedIssue._id });
 
-      try {
-        let issue = await Issue.findByIdAndUpdate(
-          _id,
-          { ...updates, updated_on: new Date() },
-          { new: false });
-        if (!issue) {
-            return res.json({ error: 'could not update', _id });
-        }
+  } catch (error) {
+    // 9. Handle any errors in the update process
+    console.error('Error updating issue:', error);
+    res.json({ error: 'could not update', _id });
+  }
+})
 
-       // Object.assign(issue, updates);
-       // issue.updated_on = new Date();
-
-       // await issue.save();
-       res.json({ result: 'successfully updated', '_id':_id });
-      } catch (error) {
-        return res.json({ error: 'could not update', _id });
-    }
-    })
     
     .delete(async function (req, res) {
       let { _id } = req.body;
