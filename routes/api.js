@@ -66,11 +66,11 @@ module.exports = function (app) {
       let { _id, ...updates } = req.body;
       
       if (!_id) {
-        return res.status(400).json({ error: 'missing _id' });
+        return res.json({ error: 'missing _id' });
       }
 
       if (!mongoose.Types.ObjectId.isValid(String(_id))) {
-        return res.status(400).json({ error: 'could not update', _id });
+        return res.json({ error: 'could not update', _id });
     }
 
       for (let key in updates) {
@@ -81,13 +81,13 @@ module.exports = function (app) {
     
    
       if (Object.keys(updates).length === 0) {
-        return res.status(400).json({ error: 'no update field(s) sent', _id });
+        return res.json({ error: 'no update field(s) sent', _id });
       }
 
       try {
         let issue = await Issue.findById(_id);
         if (!issue) {
-            return res.status(400).json({ error: 'could not update', _id });
+            return res.json({ error: 'could not update', _id });
         }
 
         Object.assign(issue, updates);
@@ -96,7 +96,7 @@ module.exports = function (app) {
         await issue.save();
         res.json({ result: 'successfully updated', _id });
       } catch (error) {
-        return res.status(400).json({ error: 'could not update', _id });
+        return res.json({ error: 'could not update', _id });
     }
     })
     
@@ -104,23 +104,23 @@ module.exports = function (app) {
       let { _id } = req.body;
   
       if (!_id) {
-          return res.status(400).json({ error: 'missing _id' });
+          return res.json({ error: 'missing _id' });
       }
   
       if (!mongoose.Types.ObjectId.isValid(String(_id))) {
-          return res.status(400).json({ error: 'could not delete', _id });
+          return res.json({ error: 'could not delete', _id });
       }
   
       try {
           let deletedIssue = await Issue.findByIdAndDelete(_id);
   
           if (!deletedIssue) {
-              return res.status(400).json({ error: 'could not delete', _id });
+              return res.json({ error: 'could not delete', _id });
           }
   
           res.json({ result: 'successfully deleted', _id });
       } catch (error) {
-          return res.status(400).json({ error: 'could not delete', _id });
+          return res.json({ error: 'could not delete', _id });
       }
   });
   

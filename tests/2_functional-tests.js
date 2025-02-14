@@ -229,7 +229,6 @@ suite('Functional Tests', function() {
                         status_text: "Updated Status"
                     })
                     .end((err, res) => {
-                        assert.equal(res.status, 400);
                         assert.deepEqual(res.body, { error: 'missing _id' });
                         done();
                     });
@@ -248,7 +247,6 @@ suite('Functional Tests', function() {
                         _id: validId, 
                     })
                     .end((err, res) => {
-                        assert.equal(res.status, 400);
                         assert.deepEqual(res.body, { error: 'no update field(s) sent' , _id: validId});
                         done();
                     });
@@ -263,10 +261,7 @@ suite('Functional Tests', function() {
                     _id: 'invalid_id',  // Invalid _id
                     issue_text: "Updated text"
                 })
-                .end((err, res) => {
-                    // Check if the status is 400
-                    assert.equal(res.status, 400);
-                    
+                .end((err, res) => {                    
                     // Ensure the error message is returned with the invalid _id
                     assert.deepEqual(res.body, { error: 'could not update', _id: 'invalid_id' });
                     done();
@@ -306,7 +301,6 @@ suite('Functional Tests', function() {
                 .delete('/api/issues/apitest')
                 .send({ _id: 'invalid_id' }) 
                 .end((err, res) => {
-                    assert.equal(res.status, 400);
                     assert.deepEqual(res.body, { error: 'could not delete', _id: 'invalid_id' });
                     done();
                 });
@@ -317,7 +311,6 @@ suite('Functional Tests', function() {
                 .delete('/api/issues/apitest')
                 .send({}) 
                 .end((err, res) => {
-                    assert.equal(res.status, 400);
                     assert.deepEqual(res.body, { error: 'missing _id' });
                     done();
                 });
