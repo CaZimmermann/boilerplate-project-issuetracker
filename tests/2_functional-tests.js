@@ -4,11 +4,44 @@ const assert = chai.assert;
 const server = require('../server');
 const mongoose = require('mongoose');
 const Issue = require('../Issue');
+const expect = chai.expect;
+
 
 chai.use(chaiHttp);
 
 suite('Functional Tests', function() {
-    let createdIssueId
+
+  describe('Issue API', function() {
+    let validId;
+
+    // Before hook to create a test issue for testing
+    before(function(done) {
+      chai.request(server)
+        .post('/api/issues/apitest') // Adjust to your endpoint
+        .send({
+          issue_title: 'Test Issue Title',
+          issue_text: 'This is a test issue text',
+          created_by: 'Tester',
+          assigned_to: 'John Doe',
+          status_text: 'In Progress',
+          open: true
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+          validId = res.body._id; // Store the ID for later tests
+          done();
+        });
+    });
+
+    // After hook to clean up the database by removing the test issue
+    after(function(done) {
+      Issue.deleteOne({ _id: validId }, (err) => {
+        if (err) return done(err);
+        done();
+      });
+    });
+  });
+
 
     test('POST /api/issues/:project should create a new issue with all fields', async function () {
         const res = await chai
@@ -52,8 +85,6 @@ suite('Functional Tests', function() {
         // Validate that open is set to true by default
         assert.isTrue(res.body.open);
     
-        // Save the issue ID for cleanup after tests
-        createdIssueId = res.body._id;
       });
       test('POST /api/issues/:project should return error if required fields are missing', async function () {
         const res = await chai
@@ -96,27 +127,7 @@ suite('Functional Tests', function() {
     
         assert.equal(res.body.assigned_to, ''); // Ensure that the optional field is empty
         assert.equal(res.body.status_text, ''); // Ensure that the optional field is empty
-      });
-
-      beforeEach(function(done) {
-        // Create a test issue
-        chai.request(server)
-          .post('/api/issues/apitest')
-          .send({
-            issue_title: 'Test Issue',
-            issue_text: 'Issue Text for filtering tests',
-            created_by: 'Tester',
-            assigned_to: 'John Doe',
-            status_text: 'In Progress',
-          })
-          .end((err, res) => {
-            if (err) return done(err);
-            // You could store the issue ID here for use in the tests
-            createdIssueId = res.body._id;
-            done();
-          });
-      });
-      
+      });     
 
       test('GET /api/issues/:project should return all issues for the project', function (done) {
         chai.request(server)
@@ -155,16 +166,18 @@ suite('Functional Tests', function() {
 
           test('GET /api/issues/:project with one filter should return filtered issues', function (done) {
             chai.request(server)
-              .get('/api/issues/apitest?assigned_to=tester&status_text=copium') 
+              .get('/api/issues/apitest?assigned_to=Tester&status_text=In Progress') 
               .end((err, res) => {
                 assert.equal(res.status, 200);
                 assert.isArray(res.body, 'Response should be an array');
           
                 if (res.body.length > 0) {
                   res.body.forEach(issue => {
-                    assert.equal(issue.assigned_to, 'tester', 'All returned issues should have assigned_to as tester');
-                    assert.equal(issue.status_text, 'copium', 'All returned issues should have status_text as copium');
+                    assert.equal(issue.assigned_to, 'Tester', 'All returned issues should have assigned_to as Tester');
+                    assert.equal(issue.status_text, 'In Progress', 'All returned issues should have status_text as In Progress');
                   });
+                } else {
+                  console.log('No issues found with the given filter');
                 }
                 done();
               });
