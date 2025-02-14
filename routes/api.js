@@ -22,24 +22,29 @@ module.exports = function (app) {
     })
     
     .post(async function (req, res){
-      let project = req.params.project;
+
+      console.log("Received POST request with body:", JSON.stringify(req.body, null, 2));
+
+      console.log("Received POST request with body:", req.body);
+
       let { issue_title, issue_text, created_by, assigned_to, status_text } = req.body;
 
-      if (!issue_title || !issue_text || !created_by) {
+      if (!issue_title || !issue_text || !created_by || issue_title.trim() === "" || issue_text.trim() === "" || created_by.trim() === "") {
+        console.log("Missing required fields!");
         return res.status(400).json({ error: "required field(s) missing" });
       }
 
       try {
         const newIssue = new Issue({
-          issue_title,
-      issue_text,
-      created_by,
-      assigned_to: assigned_to || "", // Ensure optional fields default to ""
-      status_text: status_text || "",
-      created_on: new Date(),
-      updated_on: new Date(),
-      open: true
-    });
+        issue_title,
+        issue_text,
+        created_by,
+        assigned_to: assigned_to || "", 
+        status_text: status_text || "",
+        created_on: new Date(),
+        updated_on: new Date(),
+        open: true
+      });
 
     const savedIssue = await newIssue.save();
     res.json({
@@ -55,6 +60,7 @@ module.exports = function (app) {
     });
 
   } catch (error) {
+    console.log("Error saving issue:", err);  // Debug log
     res.status(500).json({ error: 'Database error' });
   }
 })
