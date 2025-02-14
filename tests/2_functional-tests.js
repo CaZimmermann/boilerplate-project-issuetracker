@@ -98,6 +98,26 @@ suite('Functional Tests', function() {
         assert.equal(res.body.status_text, ''); // Ensure that the optional field is empty
       });
 
+      beforeEach(function(done) {
+        // Create a test issue
+        chai.request(server)
+          .post('/api/issues/apitest')
+          .send({
+            issue_title: 'Test Issue',
+            issue_text: 'Issue Text for filtering tests',
+            created_by: 'Tester',
+            assigned_to: 'John Doe',
+            status_text: 'In Progress',
+          })
+          .end((err, res) => {
+            if (err) return done(err);
+            // You could store the issue ID here for use in the tests
+            createdIssueId = res.body._id;
+            done();
+          });
+      });
+      
+
       test('GET /api/issues/:project should return all issues for the project', function (done) {
         chai.request(server)
           .get('/api/issues/apitest')

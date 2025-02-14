@@ -11,6 +11,8 @@ module.exports = function (app) {
       let project = req.params.project;
       let filters = { project: project, ...req.query };
 
+      console.log("Filters used for search:", filters);
+
       try {
         let issues = await Issue.find(filters).select('-__v');
         res.json(issues);
@@ -23,14 +25,9 @@ module.exports = function (app) {
     
     .post(async function (req, res){
 
-      console.log("Received POST request with body:", JSON.stringify(req.body, null, 2));
-
-      console.log("Received POST request with body:", req.body);
-
       let { issue_title, issue_text, created_by, assigned_to, status_text } = req.body;
 
       if (!issue_title || !issue_text || !created_by || issue_title.trim() === "" || issue_text.trim() === "" || created_by.trim() === "") {
-        console.log("Missing required fields!");
         return res.json({ error: "required field(s) missing" });
       }
 
