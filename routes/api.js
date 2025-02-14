@@ -31,7 +31,7 @@ module.exports = function (app) {
 
       if (!issue_title || !issue_text || !created_by || issue_title.trim() === "" || issue_text.trim() === "" || created_by.trim() === "") {
         console.log("Missing required fields!");
-        return res.status(400).json({ error: "required field(s) missing" });
+        return res.json({ error: "required field(s) missing" });
       }
 
       try {
